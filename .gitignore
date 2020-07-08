@@ -1,0 +1,11 @@
+# outdir
+outdir*
+
+# libs
+apex
+Dockerfile 
+
+logs
+__pycache__
+.ipynb_checkpoints
+sftp-config.json
