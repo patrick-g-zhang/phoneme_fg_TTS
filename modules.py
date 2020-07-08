@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from utils import to_gpu, get_mask_from_lengths
 import pdb
 from torch.autograd import Variable
+from layers import ConvNorm, LinearNorm, Prenet
 
 
 class ReferenceEncoder(nn.Module):
@@ -23,18 +24,18 @@ class ReferenceEncoder(nn.Module):
         convs = [nn.Conv2d(in_channels=filters[i],
                            out_channels=filters[i + 1],
                            kernel_size=(3, 3),
-                           stride=(1, 2),
+                           stride=(1, 1),
                            padding=(1, 1)) for i in range(K)]
         self.convs = nn.ModuleList(convs)
         self.bns = nn.ModuleList(
             [nn.BatchNorm2d(num_features=hp.ref_enc_filters[i])
              for i in range(K)])
 
-        out_channels = self.calculate_channels(hp.n_mel_channels, 3, 2, 1, K)
+        out_channels = self.calculate_channels(hp.n_mel_channels, 3, 1, 1, K)
         # self.gru = nn.GRU(input_size=hp.ref_enc_filters[-1] * out_channels,
         # hidden_size=hp.ref_enc_gru_size,
         # batch_first=True)
-        self.linear_out = nn.Linear(
+        self.linear_out = LinearNorm(
             hp.ref_enc_filters[-1] * out_channels, hp.ref_enc_gru_size, bias=True)
         self.n_mel_channels = hp.n_mel_channels
         self.ref_enc_gru_size = hp.ref_enc_gru_size
@@ -48,9 +49,9 @@ class ReferenceEncoder(nn.Module):
             out = bn(out)
             out = F.relu(out)
 
-        out = out.transpose(1, 2)  # [N, Ty, 128, n_mels//2^K]
+        out = out.transpose(1, 2)  # [N, Ty, 128, n_mels]
         N, T = out.size(0), out.size(1)
-        out = out.contiguous().view(N, T, -1)  # [N, Ty, 128*n_mels//2^K]
+        out = out.contiguous().view(N, T, -1)  # [N, Ty, 128*n_mels]
 
         # outs, _ = self.gru(out)
         outs = self.linear_out(out)
