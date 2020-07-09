@@ -16,5 +16,7 @@ This project is for phoneme level TTS.
 |full-blz13|113-outdir-7-4-1|FAIL|8000| 32k|  a6d707fa |  
 |full-blz13|114-outdir-7-4-2|FAIL| 12k|   | a6d707fa6  |
 |full-blz13|113-outdir-7-8-1| - | -  | -  |  cf9908d |  
-|full-blz13|113-outdir-7-8-2|  |   |   |   |  
+|full-blz13|113-outdir-7-8-2|  |   |   |  fd1e21d |  
+|full-blz13|113-outdir-7-8-3|  |   |   |   |  
+
 
