@@ -455,7 +455,7 @@ class Decoder(nn.Module):
         ------
         memory: Encoder outputs
         spk_embedds: speaker embedding vector 【spk_num, 16]
-        decoder_inputs: Decoder inputs for teacher forcing. i.e. mel-specs
+        decoder_inputs: Decoder inputs for teacher forcing. i.e. mel-specs [B, mel_channels, T]
         memory_lengths: Encoder output lengths for attention masking.
 
         RETURNS
@@ -550,9 +550,10 @@ class Tacotron2(nn.Module):
     def parse_batch(self, batch):
         # text_padded, input_lengths, spk_ids, mel_padded, gate_padded, \
             # output_lengths = batch
+        # text_padded ()
+        # mel_padded (B, mel_channel, T)
         text_padded, input_lengths, mel_padded, \
             gate_padded, output_lengths = batch
-
         text_padded = to_gpu(text_padded).long()
 
         # spk_ids = to_gpu(spk_ids).long()
@@ -580,6 +581,7 @@ class Tacotron2(nn.Module):
 
     def forward(self, inputs):
         # text_inputs: [B, T]
+        # mels: [B, mel_channels, T]
         text_inputs, input_lengths, mels, output_lengths = inputs
         input_lengths = input_lengths.data
 

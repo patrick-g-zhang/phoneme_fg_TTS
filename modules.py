@@ -18,43 +18,20 @@ class ReferenceEncoder(nn.Module):
     def __init__(self, hp):
 
         super().__init__()
-        K = len(hp.ref_enc_filters)
-        filters = [1] + hp.ref_enc_filters
-
-        convs = [nn.Conv2d(in_channels=filters[i],
-                           out_channels=filters[i + 1],
-                           kernel_size=(3, 3),
-                           stride=(1, 1),
-                           padding=(1, 1)) for i in range(K)]
-        self.convs = nn.ModuleList(convs)
-        self.bns = nn.ModuleList(
-            [nn.BatchNorm2d(num_features=hp.ref_enc_filters[i])
-             for i in range(K)])
-
-        out_channels = self.calculate_channels(hp.n_mel_channels, 3, 1, 1, K)
         # self.gru = nn.GRU(input_size=hp.ref_enc_filters[-1] * out_channels,
         # hidden_size=hp.ref_enc_gru_size,
         # batch_first=True)
         self.linear_out = LinearNorm(
-            hp.ref_enc_filters[-1] * out_channels, hp.ref_enc_gru_size, bias=True)
+            hp.n_mel_channels, hp.ref_enc_gru_size, bias=True)
         self.n_mel_channels = hp.n_mel_channels
         self.ref_enc_gru_size = hp.ref_enc_gru_size
 
     def forward(self, inputs):
-        # [N, 1, Ty, n_mels]
-        out = inputs.view(inputs.size(0), 1, -1,
-                          self.n_mel_channels)  # [N, 1, T, 80]
-        for conv, bn in zip(self.convs, self.bns):
-            out = conv(out)
-            out = bn(out)
-            out = F.relu(out)
-
-        out = out.transpose(1, 2)  # [N, Ty, 128, n_mels]
-        N, T = out.size(0), out.size(1)
-        out = out.contiguous().view(N, T, -1)  # [N, Ty, 128*n_mels]
-
-        # outs, _ = self.gru(out)
-        outs = self.linear_out(out)
+        # inputs: [B, mel_channels, T]
+        inputs = inputs.transpose(1, 2) # [B, mel_channels, T] -> [B, T, mel_channels]
+        # out = inputs.view(inputs.size(0), 1, -1,
+                          # self.n_mel_channels)  # [N, 1, T, 80]
+        outs = self.linear_out(inputs)
         return outs
 
     def calculate_channels(self, L, kernel_size, stride, pad, n_convs):
